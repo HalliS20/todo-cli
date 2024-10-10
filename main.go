@@ -3,12 +3,17 @@ package main
 import (
 	"fmt"
 	"os"
+	"todo-cli/internal/models"
+	"todo-cli/internal/repository"
+	"todo-cli/pkg"
 
 	"github.com/charmbracelet/bubbletea"
 )
 
+type Todo = models.Todo
+
 type model struct {
-	choices  []string
+	todos    []string
 	cursor   int
 	selected map[int]struct{}
 }
@@ -38,7 +43,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// The "down" and "j" keys move the cursor down
 		case "down", "j":
-			if m.cursor < len(m.choices)-1 {
+			if m.cursor < len(m.todos)-1 {
 				m.cursor++
 			}
 
@@ -64,7 +69,7 @@ func (m model) View() string {
 	s := "What should we buy at the market?\n\n"
 
 	// Iterate over our choices
-	for i, choice := range m.choices {
+	for i, choice := range m.todos {
 
 		// Is the cursor pointing at this choice?
 		cursor := " " // no cursor
@@ -90,9 +95,25 @@ func (m model) View() string {
 }
 
 func initialModel() tea.Model {
+	db, err := pkg.OpenSqLiteDatabase("./db/todo.db")
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	repo := repository.NewSQLiteRepository(db)
+	todoList := repo.GetAll()
+	checkedMap := make(map[int]struct{})
+	var todoStrings []string
+	for i, todo := range todoList {
+		todoStrings = append(todoStrings, todo.Title)
+		if todo.Done {
+			checkedMap[i] = struct{}{}
+		}
+	}
+
 	return model{
-		choices:  []string{"make todo program", "do some code", "eat a cookie"},
-		selected: make(map[int]struct{}),
+		todos:    todoStrings,
+		selected: checkedMap,
 	}
 }
 
