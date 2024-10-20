@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"todo-cli/internal/interfaces"
 	"todo-cli/internal/models"
 	"todo-cli/internal/repository"
 	"todo-cli/pkg"
@@ -13,9 +14,9 @@ import (
 type Todo = models.Todo
 
 type model struct {
-	todos    []string
-	cursor   int
-	selected map[int]struct{}
+	todos  []Todo
+	cursor int
+	repo   interfaces.IRepository
 }
 
 func (m model) Init() tea.Cmd {
@@ -50,12 +51,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// The "enter" key and the spacebar (a literal space) toggle
 		// the selected state for the item that the cursor is pointing at.
 		case "enter", " ":
-			_, ok := m.selected[m.cursor]
+			ok := m.todos[m.cursor].Done
 			if ok {
-				delete(m.selected, m.cursor)
+				m.todos[m.cursor].Done = false
 			} else {
-				m.selected[m.cursor] = struct{}{}
+				m.todos[m.cursor].Done = true
 			}
+			m.repo.Update(&m.todos[m.cursor])
+
+		// The "d" key deletes the item that the cursor is pointing at.
+		case "d":
+			m.repo.Delete(int(m.todos[m.cursor].ID))
+			m.todos = append(m.todos[:m.cursor], m.todos[m.cursor+1:]...)
 		}
 	}
 
@@ -66,7 +73,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	// The header
-	s := "What should we buy at the market?\n\n"
+	s := "Todos\n\n"
 
 	// Iterate over our choices
 	for i, choice := range m.todos {
@@ -79,16 +86,16 @@ func (m model) View() string {
 
 		// Is this choice selected?
 		checked := " " // not selected
-		if _, ok := m.selected[i]; ok {
+		if choice.Done {
 			checked = "x" // selected!
 		}
 
 		// Render the row
-		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice.Title)
 	}
 
 	// The footer
-	s += "\nPress q to quit.\n"
+	s += "\n| q: quit | d: delete |\n"
 
 	// Send the UI for rendering
 	return s
@@ -102,18 +109,10 @@ func initialModel() tea.Model {
 	}
 	repo := repository.NewSQLiteRepository(db)
 	todoList := repo.GetAll()
-	checkedMap := make(map[int]struct{})
-	var todoStrings []string
-	for i, todo := range todoList {
-		todoStrings = append(todoStrings, todo.Title)
-		if todo.Done {
-			checkedMap[i] = struct{}{}
-		}
-	}
 
 	return model{
-		todos:    todoStrings,
-		selected: checkedMap,
+		todos: todoList,
+		repo:  repo,
 	}
 }
 

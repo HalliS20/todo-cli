@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"todo-cli/internal/interfaces"
 	"todo-cli/internal/models"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -14,7 +15,7 @@ type SQLiteRepository struct {
 	db *gorm.DB
 }
 
-func NewSQLiteRepository(db *gorm.DB) *SQLiteRepository {
+func NewSQLiteRepository(db *gorm.DB) interfaces.IRepository {
 	if db.AutoMigrate(&Todo{}) != nil {
 		panic("failed to auto migrate")
 	}
