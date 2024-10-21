@@ -6,4 +6,5 @@ const (
 	List ActiveView = iota
 	Add
 	Edit
+	Empty
 )

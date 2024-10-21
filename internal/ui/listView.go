@@ -8,13 +8,17 @@ import (
 )
 
 func (m Model) renderListView() string {
-	s := "Todos\n\n"
+	colorizer := mo.NewColorizer()
+	s := colorizer.Colors["purple"] + colorizer.FontStyles["bold"] + "Todo List" + colorizer.Commands["reset"] + "\n\n"
+	// s += "\nTodos\n\n"
 
 	for i, choice := range m.Todos {
 
+		title := choice.Title
 		Cursor := " " // no cursor
 		if m.Cursor == i {
-			Cursor = ">" // cursor!
+			Cursor = colorizer.Colors["pink"] + colorizer.FontStyles["bold"] + ">" + colorizer.Commands["reset"] // cursor!
+			title = colorizer.Colors["thickGreen"] + colorizer.FontStyles["bold"] + choice.Title + colorizer.Commands["reset"]
 		}
 
 		checked := " " // not selected
@@ -22,7 +26,7 @@ func (m Model) renderListView() string {
 			checked = "x" // selected!
 		}
 
-		s += fmt.Sprintf("%s [%s] %s\n", Cursor, checked, choice.Title)
+		s += fmt.Sprintf("%s [%s] %s\n", Cursor, checked, title)
 	}
 
 	s += "\n| q: quit | d: delete | a: add |\n"
@@ -41,18 +45,23 @@ func (m Model) updateListView(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// These keys should exit the program.
 		case "ctrl+c", "q":
+			m.ActiveView = mo.Empty
 			cmd = tea.Quit
 
 		// The "up" and "k" keys move the Cursor up
 		case "up", "k":
 			if m.Cursor > 0 {
 				m.Cursor--
+			} else {
+				m.Cursor = len(m.Todos) - 1
 			}
 
 		// The "down" and "j" keys move the Cursor down
 		case "down", "j":
 			if m.Cursor < len(m.Todos)-1 {
 				m.Cursor++
+			} else {
+				m.Cursor = 0
 			}
 
 		// The "enter" key and the spacebar (a literal space) toggle

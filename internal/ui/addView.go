@@ -26,7 +26,7 @@ func (m Model) updateAddView(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 
 		case "ctrl+c":
-			m.ActiveView = mo.List
+			m.ActiveView = mo.Empty
 			m.Todos = m.Todos[:len(m.Todos)-1]
 			cmd = tea.Quit
 
