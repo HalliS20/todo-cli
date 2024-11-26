@@ -1,3 +1,4 @@
+// #cgo CFLAGS: -Wno-nullability-completeness
 package main
 
 import (

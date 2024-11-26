@@ -24,8 +24,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateListView(msg)
 	} else if m.ActiveView == mo.Add {
 		return m.updateAddView(msg)
-	} else if m.ActiveView == mo.Empty {
-		return m.updateEmptyView(msg)
 	} else {
 		return m.updateListView(msg)
 	}
@@ -36,8 +34,6 @@ func (m Model) View() string {
 		return m.renderListView()
 	} else if m.ActiveView == mo.Add {
 		return m.renderAddView()
-	} else if m.ActiveView == mo.Empty {
-		return m.renderEmptyView()
 	} else {
 		return m.renderListView()
 	}

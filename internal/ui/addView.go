@@ -44,10 +44,6 @@ func (m Model) updateAddView(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(todo.Title) > 0 {
 				todo.Title = todo.Title[:len(todo.Title)-1]
 				m.Todos[m.Cursor] = todo
-			} else {
-				m.ActiveView = mo.List
-				m.Todos = m.Todos[:len(m.Todos)-1]
-				m.Cursor--
 			}
 
 		case "space", " ":

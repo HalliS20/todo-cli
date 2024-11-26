@@ -45,7 +45,6 @@ func (m Model) updateListView(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// These keys should exit the program.
 		case "ctrl+c", "q":
-			m.ActiveView = mo.Empty
 			cmd = tea.Quit
 
 		// The "up" and "k" keys move the Cursor up
@@ -74,6 +73,12 @@ func (m Model) updateListView(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.Todos[m.Cursor].Done = true
 			}
 			m.Repo.Update(&m.Todos[m.Cursor])
+
+		case "o":
+			newTodo := mo.Todo{Done: false, Title: ""}
+			m.Todos = append(m.Todos, newTodo)
+			m.Cursor = len(m.Todos) - 1
+			m.ActiveView = mo.Add
 
 		// The "d" key deletes the item that the Cursor is pointing at.
 		case "d":
