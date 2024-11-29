@@ -33,7 +33,7 @@ func (m Model) View() string {
 	if m.ActiveView == mo.List {
 		return m.renderListView()
 	} else if m.ActiveView == mo.Add {
-		return m.renderAddView()
+		return m.renderListView()
 	} else {
 		return m.renderListView()
 	}
