@@ -61,7 +61,7 @@ func (m *Model) handleModification(msg tea.KeyMsg) {
 		} else {
 			m.Todos[m.Cursor].Done = true
 		}
-		m.Repo.Update(&m.Todos[m.Cursor])
+		m.Repo.UpdateField(m.Todos[m.Cursor], "Done")
 
 	case "o": // add new item
 		newTodo := mo.Todo{Done: false, Title: "", Index: m.Cursor + 1, ID: 0}
@@ -89,8 +89,9 @@ func (m *Model) handleOrdering(msg tea.KeyMsg) {
 	switch msg.String() {
 	case "ctrl+k": // move item up
 		if m.Cursor > 0 {
+			m.Todos[m.Cursor].Index = m.Cursor - 1
+			m.Todos[m.Cursor-1].Index = m.Cursor
 			m.Todos[m.Cursor], m.Todos[m.Cursor-1] = m.Todos[m.Cursor-1], m.Todos[m.Cursor]
-			m.Todos[m.Cursor].Index, m.Todos[m.Cursor-1].Index = m.Todos[m.Cursor-1].Index, m.Todos[m.Cursor].Index
 			modifiedTodos := []mo.Todo{m.Todos[m.Cursor], m.Todos[m.Cursor-1]}
 			m.Repo.BatchUpdateField(modifiedTodos, "Index")
 			m.Cursor--
@@ -108,8 +109,9 @@ func (m *Model) handleOrdering(msg tea.KeyMsg) {
 
 	case "ctrl+j": // move item down
 		if m.Cursor < len(m.Todos)-1 {
+			m.Todos[m.Cursor+1].Index = m.Cursor
+			m.Todos[m.Cursor].Index = m.Cursor + 1
 			m.Todos[m.Cursor], m.Todos[m.Cursor+1] = m.Todos[m.Cursor+1], m.Todos[m.Cursor]
-			m.Todos[m.Cursor].Index, m.Todos[m.Cursor+1].Index = m.Todos[m.Cursor+1].Index, m.Todos[m.Cursor].Index
 			modifiedTodos := []mo.Todo{m.Todos[m.Cursor], m.Todos[m.Cursor+1]}
 			m.Repo.BatchUpdateField(modifiedTodos, "Index")
 			m.Cursor++
