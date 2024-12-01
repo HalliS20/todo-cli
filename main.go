@@ -3,8 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"sort"
-	"todo-cli/internal/models"
 	"todo-cli/internal/repository"
 	"todo-cli/internal/ui"
 	"todo-cli/pkg"
@@ -19,14 +17,7 @@ func initialModel() tea.Model {
 		os.Exit(1)
 	}
 	repo := repository.NewGormRepository(db)
-	todoList := repo.GetAll()
-	sort.Sort(models.ByIndex(todoList))
-
-	return ui.Model{
-		Todos:      todoList,
-		Repo:       repo,
-		ActiveView: models.List,
-	}
+	return ui.NewModel(repo)
 }
 
 func main() {

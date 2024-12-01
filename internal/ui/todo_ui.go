@@ -1,40 +1,66 @@
 package ui
 
 import (
+	"sort"
 	"todo-cli/internal/interfaces"
 	mo "todo-cli/internal/models"
 
 	"github.com/charmbracelet/bubbletea"
 )
 
+type ViewType struct {
+	Update func(msg tea.Msg) (tea.Model, tea.Cmd)
+	View   func() string
+	Footer string
+}
+
 type Model struct {
 	Todos      []mo.Todo
 	Cursor     int
 	Repo       interfaces.IRepository
 	ActiveView mo.ActiveView
+	Views      map[mo.ActiveView]ViewType
+	EditCache  string
+}
+
+func NewModel(repo interfaces.IRepository) Model {
+	lisa := repo.GetAll()
+	sort.Sort(mo.ByIndex(lisa))
+
+	return Model{
+		Repo:       repo,
+		Todos:      lisa,
+		ActiveView: mo.List,
+		Views:      make(map[mo.ActiveView]ViewType),
+	}
 }
 
 func (m Model) Init() tea.Cmd {
-	// Just return `nil`, which means "no I/O right now, please."
+	m.Views[mo.List] = ViewType{
+		Update: m.updateListView,
+		View:   m.renderListView,
+		Footer: "\n| q: quit | d: delete | o: add | i: edit |\n",
+	}
+
+	m.Views[mo.Add] = ViewType{
+		Update: m.updateAddView,
+		View:   m.renderListView,
+		Footer: "\n| ctrl+c: quit | enter: save | esc: back |",
+	}
+
+	m.Views[mo.Edit] = ViewType{
+		Update: m.updateEditView,
+		View:   m.renderListView,
+		Footer: "\n| ctrl+c: quit | enter: save | esc: back |",
+	}
+
 	return nil
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	if m.ActiveView == mo.List {
-		return m.updateListView(msg)
-	} else if m.ActiveView == mo.Add {
-		return m.updateAddView(msg)
-	} else {
-		return m.updateListView(msg)
-	}
+	return m.Views[m.ActiveView].Update(msg)
 }
 
 func (m Model) View() string {
-	if m.ActiveView == mo.List {
-		return m.renderListView()
-	} else if m.ActiveView == mo.Add {
-		return m.renderListView()
-	} else {
-		return m.renderListView()
-	}
+	return m.Views[m.ActiveView].View() + m.Views[m.ActiveView].Footer
 }

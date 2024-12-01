@@ -40,8 +40,13 @@ func (r *GormDbRepository) Update(todo *Todo) {
 	}
 }
 
-func (r *GormDbRepository) UpdateField(todo Todo, field string) error {
-	return r.UpdateFieldTx(r.db, todo, field)
+func (r *GormDbRepository) UpdateField(todo Todo, field string) {
+	err := r.UpdateFieldTx(r.db, todo, field)
+	if err != nil {
+		fmt.Println("failed to update")
+		panic(err)
+	}
+	return
 }
 
 func (r *GormDbRepository) UpdateFieldTx(db *gorm.DB, todo Todo, field string) error {
@@ -61,6 +66,23 @@ func (r *GormDbRepository) BatchUpdate(todos []Todo) {
 	if result.Error != nil {
 		fmt.Println("failed to update")
 		panic(result.Error)
+	}
+}
+
+func (r *GormDbRepository) BatchUpdateField(todos []Todo, field string) {
+	error := r.db.Transaction(func(tx *gorm.DB) error {
+		for _, todo := range todos {
+			err := r.UpdateFieldTx(tx, todo, field)
+			if err != nil {
+				fmt.Println("failed to update")
+				panic(err)
+			}
+		}
+		return nil
+	})
+	if error != nil {
+		fmt.Println("failed to batch update")
+		panic(error)
 	}
 }
 

@@ -12,7 +12,8 @@ type IRepository interface {
 	Create(todo *Todo)
 	Update(todo *Todo)
 	BatchUpdate(todos []Todo)
-	UpdateField(todo Todo, field string) error
+	BatchUpdateField(todos []Todo, field string)
+	UpdateField(todo Todo, field string)
 	UpdateFieldTx(db *gorm.DB, todo Todo, field string) error
 	FixAndAdd(todos []Todo)
 	Delete(id int)
