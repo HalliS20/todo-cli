@@ -68,7 +68,7 @@ func (m Model) updateListView(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Repo.Update(&m.Todos[m.Cursor])
 
 		case "o": // add new item
-			newTodo := mo.Todo{Done: false, Title: "", Index: len(m.Todos)}
+			newTodo := mo.Todo{Done: false, Title: "", Index: m.Cursor + 1, ID: 0}
 			insertAtIndex(&m.Todos, m.Cursor+1, newTodo)
 			m.Cursor++
 			m.ActiveView = mo.Add

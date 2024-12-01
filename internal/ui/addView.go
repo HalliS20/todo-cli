@@ -1,8 +1,7 @@
 package ui
 
 import (
-	// "fmt"
-	"todo-cli/internal/interfaces"
+	"sort"
 	mo "todo-cli/internal/models"
 	"unicode"
 
@@ -30,13 +29,16 @@ func (m Model) updateAddView(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = tea.Quit
 
 		case "enter":
+			fixIndexing(&m.Todos)
+			m.Repo.FixAndAdd(m.Todos)
+			todos := m.Repo.GetAll()
+			sort.Sort(mo.ByIndex(todos))
+			m.Todos = todos
 			m.ActiveView = mo.List
-			fixOrdering(&m.Todos, m.Repo)
-			m.Todos = m.Repo.GetAll()
 
 		case "esc":
 			m.ActiveView = mo.List
-			m.Todos = m.Todos[:len(m.Todos)-1]
+			m.Todos = append(m.Todos[:m.Cursor], m.Todos[m.Cursor+1:]...)
 			m.Cursor--
 
 		case "backspace", "delete":
@@ -59,9 +61,8 @@ func (m Model) updateAddView(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func fixOrdering(lisa *[]mo.Todo, repo interfaces.IRepository) {
+func fixIndexing(lisa *[]mo.Todo) {
 	for i := 0; i < len(*lisa); i++ {
 		(*lisa)[i].Index = i
-		repo.Update(&(*lisa)[i])
 	}
 }
