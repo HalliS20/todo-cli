@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"sort"
 	mo "todo-cli/internal/models"
 	"unicode"
 
@@ -8,12 +9,10 @@ import (
 )
 
 func (m Model) renderAddView() string {
-	todo := m.Todos[m.Cursor]
-	s := "Add a new todo\n\n"
-	s += "   " + "Title: " + todo.Title + "\n\n"
-
-	s += "\n| ctrl+c: quit | enter: add | esc : cancel |\n"
-
+	s := m.renderListView()
+	title := m.Todos[m.Cursor].Title
+	s += "\n"
+	s += title
 	return s
 }
 
@@ -21,8 +20,7 @@ func (m Model) updateAddView(msg tea.Msg) (tea.Model, tea.Cmd) {
 	todo := m.Todos[m.Cursor]
 	var cmd tea.Cmd = nil
 	switch msg := msg.(type) {
-	// Is it a key press?
-	case tea.KeyMsg:
+	case tea.KeyMsg: // detects key press
 		switch msg.String() {
 
 		case "ctrl+c":
@@ -31,13 +29,16 @@ func (m Model) updateAddView(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = tea.Quit
 
 		case "enter":
+			fixIndexing(&m.Todos)
+			m.Repo.FixAndAdd(m.Todos)
+			todos := m.Repo.GetAll()
+			sort.Sort(mo.ByIndex(todos))
+			m.Todos = todos
 			m.ActiveView = mo.List
-			m.Repo.Create(&todo)
-			m.Todos = m.Repo.GetAll()
 
 		case "esc":
 			m.ActiveView = mo.List
-			m.Todos = m.Todos[:len(m.Todos)-1]
+			m.Todos = append(m.Todos[:m.Cursor], m.Todos[m.Cursor+1:]...)
 			m.Cursor--
 
 		case "backspace", "delete":
@@ -58,4 +59,10 @@ func (m Model) updateAddView(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	return m, cmd
+}
+
+func fixIndexing(lisa *[]mo.Todo) {
+	for i := 0; i < len(*lisa); i++ {
+		(*lisa)[i].Index = i
+	}
 }

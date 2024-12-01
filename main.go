@@ -1,9 +1,9 @@
-// #cgo CFLAGS: -Wno-nullability-completeness
 package main
 
 import (
 	"fmt"
 	"os"
+	"sort"
 	"todo-cli/internal/models"
 	"todo-cli/internal/repository"
 	"todo-cli/internal/ui"
@@ -13,13 +13,14 @@ import (
 )
 
 func initialModel() tea.Model {
-	db, err := pkg.OpenSqLiteDatabase("./db/todo.db")
+	db, err := pkg.OpenSqLiteDatabase("./db/todo.db", false)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	repo := repository.NewSQLiteRepository(db)
+	repo := repository.NewGormRepository(db)
 	todoList := repo.GetAll()
+	sort.Sort(models.ByIndex(todoList))
 
 	return ui.Model{
 		Todos:      todoList,
