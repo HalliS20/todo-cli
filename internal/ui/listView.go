@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"sort"
 
 	mo "todo-cli/internal/models"
 
@@ -96,13 +95,15 @@ func (m *Model) handleOrdering(msg tea.KeyMsg) {
 			m.Repo.BatchUpdateField(modifiedTodos, "Index")
 			m.Cursor--
 		} else {
-			m.Todos[m.Cursor].Index = len(m.Todos) - 1
+			cache := m.Todos[m.Cursor]
 			m.Cursor = len(m.Todos) - 1
 			for i := 1; i < len(m.Todos); i++ {
 				m.Todos[i].Index = i - 1
+				m.Todos[i-1] = m.Todos[i]
 			}
-			sort.Sort(mo.ByIndex(m.Todos))
-			m.Repo.BatchUpdate(m.Todos)
+			m.Todos[len(m.Todos)-1] = cache
+			m.Todos[len(m.Todos)-1].Index = len(m.Todos) - 1
+			m.Repo.BatchUpdateField(m.Todos, "Index")
 		}
 
 	case "ctrl+j": // move item down
@@ -113,13 +114,15 @@ func (m *Model) handleOrdering(msg tea.KeyMsg) {
 			m.Repo.BatchUpdateField(modifiedTodos, "Index")
 			m.Cursor++
 		} else {
-			m.Todos[m.Cursor].Index = 0
+			cache := m.Todos[m.Cursor]
 			m.Cursor = 0
-			for i := 0; i < len(m.Todos)-1; i++ {
+			for i := len(m.Todos) - 1; i > 0; i-- {
 				m.Todos[i].Index = i + 1
+				m.Todos[i] = m.Todos[i-1]
 			}
-			sort.Sort(mo.ByIndex(m.Todos))
-			m.Repo.BatchUpdate(m.Todos)
+			m.Todos[0] = cache
+			m.Todos[0].Index = 0
+			m.Repo.BatchUpdateField(m.Todos, "Index")
 		}
 	}
 }
