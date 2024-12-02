@@ -11,7 +11,7 @@ import (
 )
 
 func initialModel() tea.Model {
-	db, err := pkg.OpenSqLiteDatabase("./db/todo.db", false)
+	db, err := pkg.OpenSqLiteDatabase("~/.todo/db/todo.db", false)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
