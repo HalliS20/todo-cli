@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"todo-cli/internal/repository"
 	"todo-cli/internal/ui"
 	"todo-cli/pkg"
@@ -11,7 +12,16 @@ import (
 )
 
 func initialModel() tea.Model {
-	db, err := pkg.OpenSqLiteDatabase("~/.todo/db/todo.db", false)
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	pathRest := ".todo/db/todo.db"
+	dbPath := filepath.Join(homeDir, pathRest)
+
+	db, err := pkg.OpenSqLiteDatabase(dbPath, false)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

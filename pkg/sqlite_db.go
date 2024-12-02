@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
+	"path/filepath"
 	"time"
 
 	"gorm.io/driver/sqlite"
@@ -19,9 +19,8 @@ func OpenSqLiteDatabase(dbPath string, hardLogging bool) (*gorm.DB, error) {
 		Logger: logger.Default.LogMode(logger.Silent),
 	}
 
-	splits := strings.Split(dbPath, "/")
-	withoutDbName := strings.Join(splits[:len(splits)-1], "/")
-	err := os.MkdirAll(withoutDbName, 0755)
+	dbDir := filepath.Dir(dbPath)
+	err := os.MkdirAll(dbDir, 0755)
 	if err != nil {
 		return nil, err
 	}
