@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"todo-cli/internal/repository"
+	sqli "todo-cli/internal/repository/sqlite"
 	"todo-cli/internal/ui"
 	"todo-cli/pkg"
 
@@ -26,7 +26,7 @@ func initialModel() tea.Model {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	repo := repository.NewGormRepository(db)
+	repo := sqli.NewGormRepository(db)
 	return ui.NewModel(repo)
 }
 

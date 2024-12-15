@@ -1,10 +1,9 @@
-package repository
+package sqliteRepository
 
 import (
 	"fmt"
 	"reflect"
 	"strings"
-	"todo-cli/internal/interfaces"
 	"todo-cli/internal/models"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -17,11 +16,14 @@ type GormDbRepository struct {
 	db *gorm.DB
 }
 
-func NewGormRepository(db *gorm.DB) interfaces.IRepository {
+func NewGormRepository(db *gorm.DB) GormDbRepository {
 	if db.AutoMigrate(&Todo{}) != nil {
-		panic("failed to auto migrate")
+		panic("failed to auto migrate todos")
 	}
-	return &GormDbRepository{db}
+	if db.AutoMigrate(&models.TodoList{}) != nil {
+		panic("failed to auto migrate todo lists")
+	}
+	return GormDbRepository{db}
 }
 
 func (r *GormDbRepository) Create(todo *Todo) {
@@ -46,7 +48,6 @@ func (r *GormDbRepository) UpdateField(todo Todo, field string) {
 		fmt.Println("failed to update")
 		panic(err)
 	}
-	return
 }
 
 func (r *GormDbRepository) UpdateFieldTx(db *gorm.DB, todo Todo, field string) error {

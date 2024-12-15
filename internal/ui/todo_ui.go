@@ -2,8 +2,8 @@ package ui
 
 import (
 	"sort"
-	"todo-cli/internal/interfaces"
 	mo "todo-cli/internal/models"
+	sqli "todo-cli/internal/repository/sqlite"
 
 	"github.com/charmbracelet/bubbletea"
 )
@@ -17,13 +17,13 @@ type ViewType struct {
 type Model struct {
 	Todos      []mo.Todo
 	Cursor     int
-	Repo       interfaces.IRepository
+	Repo       sqli.GormDbRepository
 	ActiveView mo.ActiveView
 	Views      map[mo.ActiveView]ViewType
 	EditCache  string
 }
 
-func NewModel(repo interfaces.IRepository) Model {
+func NewModel(repo sqli.GormDbRepository) Model {
 	lisa := repo.GetAll()
 	sort.Sort(mo.ByIndex(lisa))
 
