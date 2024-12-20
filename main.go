@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	sqli "todo-cli/internal/repository/sqlite"
+	sqli "todo-cli/internal/repository/gormRepository"
 	"todo-cli/internal/ui"
 	"todo-cli/pkg"
 

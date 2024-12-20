@@ -3,7 +3,6 @@ package ui
 import (
 	"sort"
 	mo "todo-cli/internal/models"
-	"unicode"
 
 	"github.com/charmbracelet/bubbletea"
 )
@@ -11,21 +10,6 @@ import (
 func fixIndexing(lisa *[]mo.Todo) {
 	for i := 0; i < len(*lisa); i++ {
 		(*lisa)[i].Index = i
-	}
-}
-
-func (m *Model) handleTextInput(msg tea.KeyMsg, todo *mo.Todo) {
-	switch msg.String() {
-	case "backspace", "delete":
-		if len(todo.Title) > 0 {
-			todo.Title = todo.Title[:len(todo.Title)-1]
-		}
-	case "space", " ":
-		todo.Title += " "
-	default:
-		if unicode.IsPrint(rune(msg.String()[0])) {
-			todo.Title += msg.String()
-		}
 	}
 }
 
@@ -43,10 +27,8 @@ func (m *Model) updateAddView(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "enter":
 			fixIndexing(&m.Todos)
-			m.Repo.FixAndAdd(m.Todos)
-			todos := m.Repo.GetAll()
-			sort.Sort(mo.ByIndex(todos))
-			m.Todos = todos
+			m.Repo.Todos.OrderAndAdd(&m.Todos)
+			sort.Sort(mo.ByIndex(m.Todos))
 			m.ActiveView = mo.List
 
 		case "esc":
@@ -55,7 +37,7 @@ func (m *Model) updateAddView(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Cursor--
 
 		default:
-			m.handleTextInput(msg, &todo)
+			m.HandleTodoInput(msg, &todo)
 			m.Todos[m.Cursor] = todo
 		}
 	}
@@ -74,7 +56,7 @@ func (m *Model) updateEditView(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = tea.Quit
 
 		case "enter":
-			m.Repo.UpdateField(todo, "Title")
+			m.Repo.Todos.UpdateField(&todo, "Title")
 			m.ActiveView = mo.List
 
 		case "esc":
@@ -82,7 +64,7 @@ func (m *Model) updateEditView(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.Todos[m.Cursor].Title = m.EditCache
 
 		default:
-			m.handleTextInput(msg, &todo)
+			m.HandleTodoInput(msg, &todo)
 			m.Todos[m.Cursor] = todo
 
 		}
