@@ -21,19 +21,19 @@ Developed using go and Charmbracelets Bubbletea library
 
 ### Specific
 
-#### List View
+- #### List View
 
-- Enter : enters list
+  - Enter : enters list
 
-#### Todo View
+- #### Todo View
 
-- Enter : marks done
-- "-" : Navigates to List view
+  - Enter : marks done
+  - "-" : Navigates to List view
 
-#### Editing/adding
+- #### Editing/adding
 
-- ESC : cancels
-- Enter : finishes adding/editing
+  - ESC : cancels
+  - Enter : finishes adding/editing
 
 ### Extra
 
