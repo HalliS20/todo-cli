@@ -35,7 +35,7 @@ Developed using go and Charmbracelets Bubbletea library
 - ESC : cancels
 - Enter : finishes adding/editing
 
-- ### Extra
+### Extra
 
 - ctrl+c : Quits anywhere anytime
 - backspace : also deltes
