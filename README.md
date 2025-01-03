@@ -33,7 +33,7 @@ Developed using go and Charmbracelets Bubbletea library
 #### Editing/adding
 
 - ESC : cancels
-- Enter : finishes adding
+- Enter : finishes adding/editing
 
 - ### Extra
 
