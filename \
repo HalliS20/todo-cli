@@ -1,0 +1,35 @@
+package combo
+
+import (
+	"todo-cli/internal/models/lists"
+	"todo-cli/internal/models/todo"
+)
+
+type TodoTypes interface {
+	todo.Todo | lists.TodoList
+}
+
+type TodoPointers interface {
+	*todo.Todo | *lists.TodoList
+}
+
+type TodoTypeList interface {
+	[]todo.Todo | []lists.TodoList
+}
+
+type TodoTypeListPointers interface {
+	*[]todo.Todo | *[]lists.TodoList
+}
+
+type Combo interface {
+	GetIndex() int
+	SetIndex() int
+	GetAddress() *any
+	SetAddress(addr *any)
+}
+
+type ComboList []*Combo
+
+func (a ComboList) Len() int           { return len(a) }
+func (a ComboList) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ComboList) Less(i, j int) bool { return *a[i].GetIndex() < *(a)[j].GetIndex() }

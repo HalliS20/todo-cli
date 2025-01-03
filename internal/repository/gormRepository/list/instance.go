@@ -1,13 +1,13 @@
 package listRepo
 
 import (
-	"todo-cli/internal/models"
+	"todo-cli/internal/models/lists"
 
 	"gorm.io/gorm"
 )
 
 type (
-	TodoList = models.TodoList
+	TodoList = lists.TodoList
 )
 
 type GormListRepo struct {

@@ -8,7 +8,7 @@ func Reduce[T, U any](lis []T, f func(T, U) U) U {
 		var zero U
 		return f(lis[0], zero)
 	default:
-		return f(lis[0], Reduce(lis[1:], f))
+		return f(lis[0], Reduce[T, U](lis[1:], f))
 	}
 }
 
@@ -19,7 +19,7 @@ func Map[T, U any](lis []T, f func(T) U) []U {
 	case 1:
 		return []U{f(lis[0])}
 	default:
-		return append([]U{f(lis[0])}, Map(lis[1:], f)...)
+		return append([]U{f(lis[0])}, Map[T, U](lis[1:], f)...)
 	}
 }
 
@@ -44,7 +44,7 @@ func Zip[T, U, V any](list1 []T, list2 []U, f func(T, U) V) []V {
 	case 1:
 		return []V{f(list1[0], list2[0])}
 	default:
-		return append([]V{f(list1[0], list2[0])}, Zip(list1[1:], list2[1:], f)...)
+		return append([]V{f(list1[0], list2[0])}, Zip[T, U, V](list1[1:], list2[1:], f)...)
 	}
 }
 
@@ -71,6 +71,7 @@ func LPtoPL[T any](items *[]T) []*T {
 
 func InsertAtIndex[Type any](lisa *[]Type, index int, value Type) {
 	*lisa = append(*lisa, value)
+
 	if index >= len(*lisa) || index < 0 || len(*lisa) <= 1 {
 		return
 	}

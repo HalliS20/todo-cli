@@ -2,14 +2,11 @@ package gormBase
 
 import (
 	"fmt"
-	"reflect"
-	mo "todo-cli/internal/models"
-
 	"gorm.io/gorm"
+	"reflect"
+	mo "todo-cli/internal/models/Unison"
 )
 
-// it may not work to have item here as a pointer
-// since we need to check which TodoType it is and pointer may mess it up
 func Create[T mo.TodoPointers](item T, db *gorm.DB) {
 	result := db.Create(item)
 	if result.Error != nil {
@@ -40,8 +37,8 @@ func GetOne[T mo.TodoTypes](id int, db *gorm.DB) T {
 	return item
 }
 
-func GetAll[T mo.TodoTypes](db *gorm.DB) []T {
-	var items []T
+func GetAll[T mo.TodoTypes](db *gorm.DB) []*T {
+	var items []*T
 	result := db.Find(&items)
 	if result.Error != nil {
 		typeName := reflect.TypeOf(items).Elem().Name()
@@ -51,13 +48,13 @@ func GetAll[T mo.TodoTypes](db *gorm.DB) []T {
 	return items
 }
 
-func UpdateOrAdd[T mo.TodoPointers](items []T, db *gorm.DB) {
+func UpdateOrAdd[T mo.TodoPointers](items *[]T, db *gorm.DB) {
 	error := db.Transaction(func(tx *gorm.DB) error {
-		for i := range items {
-			id := reflect.ValueOf(items[i]).Elem().FieldByName("ID").Interface().(uint)
+		for i := range *items {
+			id := reflect.ValueOf((*items)[i]).Elem().FieldByName("ID").Interface().(uint)
 			if id == 0 {
 				// WE Create an item if it has no id which indicates it doesn't exist
-				err := tx.Create(items[i]).Error
+				err := tx.Create((*items)[i]).Error
 				if err != nil {
 					fmt.Println("failed to Create")
 					panic(err)
@@ -65,7 +62,7 @@ func UpdateOrAdd[T mo.TodoPointers](items []T, db *gorm.DB) {
 				continue
 			}
 			// otherwise WE just update the index since all items passed in need an index update or creation
-			err := UpdateFieldTx(items[i], "Index", tx)
+			err := UpdateFieldTx((*items)[i], "Index", tx)
 			if err != nil {
 				fmt.Println("failed to update")
 				panic(err)

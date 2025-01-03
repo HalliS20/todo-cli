@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	sqli "todo-cli/internal/repository/gormRepository"
 	"todo-cli/internal/ui"
-	"todo-cli/pkg"
+	"todo-cli/pkg/sqlite"
 
 	"github.com/charmbracelet/bubbletea"
 )
@@ -21,13 +21,13 @@ func initialModel() tea.Model {
 	pathRest := ".todo/db/todo.db"
 	dbPath := filepath.Join(homeDir, pathRest)
 
-	db, err := pkg.OpenSqLiteDatabase(dbPath, false)
+	db, err := sqlite.OpenSqLiteDatabase(dbPath, false)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 	repo := sqli.NewGormRepository(db)
-	return ui.NewModel(repo)
+	return ui.NewUI(repo)
 }
 
 func main() {
@@ -37,4 +37,5 @@ func main() {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)
 	}
+	fmt.Println("Bye Bye :)")
 }

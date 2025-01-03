@@ -2,11 +2,10 @@ package gormBase
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 	"reflect"
 	"strings"
-
-	"gorm.io/gorm"
-	mo "todo-cli/internal/models"
+	mo "todo-cli/internal/models/Unison"
 	fs "todo-cli/pkg/functions"
 )
 

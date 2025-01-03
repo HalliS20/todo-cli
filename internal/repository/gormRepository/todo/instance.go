@@ -1,13 +1,13 @@
 package todoRepo
 
 import (
-	"todo-cli/internal/models"
+	"todo-cli/internal/models/todo"
 
 	"gorm.io/gorm"
 )
 
 type (
-	Todo = models.Todo
+	Todo = todo.Todo
 )
 
 type GormTodoRepo struct {
