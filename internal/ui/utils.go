@@ -1,12 +1,9 @@
-package todo_ui
+package ui
 
 import (
 	"strconv"
 	mo "todo-cli/internal/models/todo"
 )
-
-// Goal is to combine this with lists identical utils \\
-// \/\/\/\/\/\/\/\/\/ ============ \/\/\/\/\/\/\/\/\/ \\
 
 func ListWrap(lisa *[]*mo.Todo, up bool) {
 	// if we go up we are moving from the end(0) to one from back (listEnd - 1)

@@ -1,11 +1,12 @@
 package todo
 
 type Todo struct {
-	ID     uint   `gorm:"primaryKey"`
-	Index  int    `gorm:"not null"`
-	Title  string `gorm:"not null"`
-	Done   bool   `gorm:"not null;default:false"`
-	ListID uint   `gorm:"not null"`
+	ID       uint   `gorm:"primaryKey"`
+	Index    int    `gorm:"not null"`
+	Title    string `gorm:"not null"`
+	Done     bool   `gorm:"not null;default:false"`
+	Dir      bool   `gorm:"not null;default:false"`
+	ParentID uint   `gorm:"not null"`
 }
 
 type Todos []*Todo

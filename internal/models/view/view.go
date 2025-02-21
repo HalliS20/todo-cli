@@ -1,13 +1,13 @@
 package view
 
 import (
-	"github.com/charmbracelet/bubbletea"
-	"todo-cli/internal/enums/command"
 	"todo-cli/pkg/colorizer"
+
+	"github.com/charmbracelet/bubbletea"
 )
 
 type View struct {
-	Update  func(msg tea.Msg) command.Command
+	Update  func(msg tea.Msg) tea.Cmd
 	View    func() string
 	Footer  string
 	Header  string

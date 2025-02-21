@@ -1,15 +1,14 @@
-package todo_ui
+package ui
 
 import (
-	cm "todo-cli/internal/enums/command"
 	op "todo-cli/internal/enums/operation"
-	mo "todo-cli/internal/models/todo"
+	td "todo-cli/internal/models/todo"
 	f "todo-cli/pkg/functions"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func (m *Model) BigRem(todo *mo.Todo) {
+func (m *Model) BigRem(todo *td.Todo) {
 	shiftMode := false
 	i := todo.Index
 	for ; i < len(m.AllTodos)-1; i++ {
@@ -29,17 +28,20 @@ func (m *Model) BigRem(todo *mo.Todo) {
 func (m *Model) HandleModification(msg tea.KeyMsg) {
 	switch msg.String() {
 	case "enter", " ": // toggle done
-		ok := m.ShownTodos[m.Cursor].Done
-		if ok {
-			m.ShownTodos[m.Cursor].Done = false
+		if !m.ShownTodos[m.Cursor].Dir {
+			m.ShownTodos[m.Cursor].Done = !m.ShownTodos[m.Cursor].Done
+			m.Repo.Todos.UpdateField(m.ShownTodos[m.Cursor], "Done")
 		} else {
-			m.ShownTodos[m.Cursor].Done = true
+			idCopy := m.ShownTodos[m.Cursor].ID
+			m.ParentID = &idCopy
+			nameCopy := m.ShownTodos[m.Cursor].Title
+			m.ParentName = &nameCopy
+			m.SwitchList()
 		}
-		m.Repo.Todos.UpdateField(m.ShownTodos[m.Cursor], "Done")
 
 	case "o": // add new item
 		m.Cursor++
-		newTodo := mo.Todo{Done: false, Title: "", Index: m.Cursor, ListID: *m.ListID}
+		newTodo := td.Todo{Done: false, Title: "", Index: m.Cursor, ParentID: *m.ParentID}
 		f.InsertAtIndex(&m.ShownTodos, m.Cursor, &newTodo)
 		m.AllTodos = append(m.AllTodos, &newTodo)
 		m.ActiveOp = op.Add
@@ -56,6 +58,9 @@ func (m *Model) HandleModification(msg tea.KeyMsg) {
 
 	case "d", "backspace": // delete item
 		m.BigRem(m.ShownTodos[m.Cursor])
+		if m.ShownTodos[m.Cursor].Dir {
+			m.DirDelete(m.ShownTodos[m.Cursor].ID)
+		}
 		m.Repo.Todos.Delete(int(m.ShownTodos[m.Cursor].ID))
 		m.ShownTodos = append(m.ShownTodos[:m.Cursor], m.ShownTodos[m.Cursor+1:]...)
 		if m.Cursor > len(m.ShownTodos)-1 {
@@ -101,13 +106,76 @@ func (m *Model) HandleOrdering(msg tea.KeyMsg) {
 	}
 }
 
-func (m *Model) HandleNavUp(msg tea.KeyMsg) cm.Command {
+func (m *Model) HandleNavUp(msg tea.KeyMsg) {
 	switch msg.String() {
 	case "-":
-		*m.ListID = 0
-		m.Cursor = 0
+		pp := m.GetParentsParent()
+		pi := m.getItem(pp)
+		piName := "Todo List"
+		if pi != nil {
+			piName = pi.Title
+		}
+		*m.ParentID = pp
+		*m.ParentName = piName
 		m.SwitchList()
-		return cm.NavUp
 	}
-	return cm.None
+}
+
+func (m *Model) getItem(id uint) *td.Todo {
+	for _, item := range m.AllTodos {
+		if item.ID == id {
+			return item
+		}
+	}
+	return nil
+}
+
+func (m *Model) GetParentsParent() uint {
+	for _, item := range m.AllTodos {
+		if item.ID == *m.ParentID {
+			return item.ParentID
+		}
+	}
+	return 0
+}
+
+func (m *Model) SwitchList() {
+	m.ShownTodos = []*td.Todo{}
+	for _, item := range m.AllTodos {
+		if item.ParentID == *m.ParentID {
+			m.ShownTodos = append(m.ShownTodos, item)
+		}
+	}
+	if m.Cursor >= len(m.ShownTodos) {
+		m.Cursor = 0
+	}
+}
+
+func (m *Model) DirDelete(id uint) {
+	for _, item := range m.AllTodos {
+		if item.ParentID != id {
+			continue
+		}
+		if item.Dir {
+			m.DirDelete(item.ID)
+		} else {
+			m.Repo.Todos.Delete(int(item.ID))
+		}
+	}
+}
+
+func (m *Model) DelUnfinished() {
+	i := 0
+	item := &td.Todo{}
+	for i, item = range m.AllTodos {
+		if item.ID == 0 {
+			break
+		}
+	}
+	lennie := len(m.AllTodos)
+	if i != len(m.AllTodos)-1 {
+		m.AllTodos = append(m.AllTodos[:i], m.AllTodos[i+1:]...)
+		return
+	}
+	m.AllTodos = m.AllTodos[:lennie-1]
 }

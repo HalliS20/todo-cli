@@ -1,8 +1,7 @@
-package todo_ui
+package ui
 
 import (
 	"sort"
-	cm "todo-cli/internal/enums/command"
 	op "todo-cli/internal/enums/operation"
 	td "todo-cli/internal/models/todo"
 	bh "todo-cli/internal/ui/base"
@@ -10,7 +9,7 @@ import (
 	"github.com/charmbracelet/bubbletea"
 )
 
-func (m *Model) updateAddView(msg tea.Msg) cm.Command {
+func (m *Model) updateAddView(msg tea.Msg) tea.Cmd {
 	todo := m.ShownTodos[m.Cursor]
 	switch msg := msg.(type) {
 	case tea.KeyMsg: // detects key press
@@ -19,15 +18,21 @@ func (m *Model) updateAddView(msg tea.Msg) cm.Command {
 		case "ctrl+c":
 			m.ActiveOp = op.Lister
 			m.ShownTodos = append(m.ShownTodos[:m.Cursor], m.ShownTodos[m.Cursor+1:]...)
-			return cm.Quit
+			return tea.Quit
 
 		case "enter":
+			lastLetter := string(todo.Title[len(todo.Title)-1])
+			if lastLetter == "/" {
+				todo.Dir = true
+			}
 			m.Repo.Todos.OrderAndAdd(&m.ShownTodos)
 			sort.Sort(td.Todos(m.AllTodos))
 			m.ActiveOp = op.Lister
 		case "esc":
 			m.ActiveOp = op.Lister
+			m.ShownTodos[m.Cursor].ID = 0
 			m.ShownTodos = append(m.ShownTodos[:m.Cursor], m.ShownTodos[m.Cursor+1:]...)
+			m.DelUnfinished()
 			m.Cursor--
 
 		default:
@@ -36,10 +41,10 @@ func (m *Model) updateAddView(msg tea.Msg) cm.Command {
 		}
 	}
 
-	return cm.None
+	return nil
 }
 
-func (m *Model) updateEditView(msg tea.Msg) cm.Command {
+func (m *Model) updateEditView(msg tea.Msg) tea.Cmd {
 	todo := m.ShownTodos[m.Cursor]
 	switch msg := msg.(type) {
 	case tea.KeyMsg: // detects key press
@@ -47,11 +52,17 @@ func (m *Model) updateEditView(msg tea.Msg) cm.Command {
 
 		case "ctrl+c":
 			m.ActiveOp = op.Lister
-			return cm.Quit
+			return tea.Quit
 
 		case "enter":
-			m.Repo.Todos.UpdateField(todo, "Title")
-			m.ActiveOp = op.Lister
+			lastLetter := string(todo.Title[len(todo.Title)-1])
+			if lastLetter == "/" && !todo.Dir {
+				todo.Dir = true
+				m.Repo.Todos.UpdateField(todo, "Dir")
+			} else {
+				m.Repo.Todos.UpdateField(todo, "Title")
+				m.ActiveOp = op.Lister
+			}
 
 		case "esc":
 			m.ActiveOp = op.Lister
@@ -63,19 +74,19 @@ func (m *Model) updateEditView(msg tea.Msg) cm.Command {
 
 		}
 	}
-	return cm.None
+	return nil
 }
 
-func (m *Model) updateListView(msg tea.Msg) cm.Command {
-	cmd := cm.None
+func (m *Model) updateListView(msg tea.Msg) tea.Cmd {
+	var cmd tea.Cmd = nil
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 
 		switch msg.String() {
 		default:
 			cmd = bh.HandleNavigation(msg, &m.Cursor, len(m.ShownTodos))
-			if cmd == cm.None {
-				cmd = m.HandleNavUp(msg)
+			if cmd == nil {
+				m.HandleNavUp(msg)
 			}
 			m.HandleModification(msg)
 			m.HandleOrdering(msg)

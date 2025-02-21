@@ -1,83 +1,86 @@
 package ui
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
-	vw "todo-cli/internal/enums/active_view"
-	cm "todo-cli/internal/enums/command"
+	"sort"
+	op "todo-cli/internal/enums/operation"
+	td "todo-cli/internal/models/todo"
+	vw "todo-cli/internal/models/view"
 	sqli "todo-cli/internal/repository/gormRepository"
-	ls "todo-cli/internal/ui/list"
-	td "todo-cli/internal/ui/todo"
+	cl "todo-cli/pkg/colorizer"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
-type UI struct {
-	TodoModel  *td.Model
-	ListModel  *ls.Model
-	ActiveView vw.ActiveView
+type Model struct {
+	ActiveOp   op.ActiveOp
 	Repo       sqli.GormRepository
-	ListID     uint
-	ListName   string
+	AllTodos   []*td.Todo
+	ShownTodos []*td.Todo
+	ParentID   *uint
+	ParentName *string
+	Cursor     int
+	Views      map[op.ActiveOp]vw.View
+	EditCache  string
 }
 
-func NewUI(repo sqli.GormRepository) *UI {
-	newUI := UI{
-		ActiveView: vw.Lists,
+func NewUI(repo sqli.GormRepository) *Model {
+	lisa := repo.Todos.GetAll()
+	sort.Sort(td.Todos(lisa))
+	initialID := uint(0)
+	initialName := "Todo List"
+	newMdl := Model{
 		Repo:       repo,
-		TodoModel:  td.NewTodoModel(repo),
-		ListModel:  ls.NewListModel(repo),
-		ListID:     0,
+		AllTodos:   lisa,
+		ShownTodos: []*td.Todo{},
+		ActiveOp:   op.Lister,
+		Views:      make(map[op.ActiveOp]vw.View),
+		ParentID:   &initialID,
+		ParentName: &initialName,
 	}
-	newUI.TodoModel.ListID = &newUI.ListID
-	newUI.ListModel.ListID = &newUI.ListID
-	newUI.ListModel.ListName = &newUI.ListName
-	newUI.TodoModel.ListName = &newUI.ListName
-	return &newUI
+	newMdl.Init()
+	return &newMdl
 }
 
-func (ui *UI) Init() tea.Cmd {
+func (ui *Model) Init() tea.Cmd {
+	ui.Views[op.Lister] = vw.View{
+		Update:  ui.updateListView,
+		View:    ui.renderListView,
+		Footer:  "\n| q : quit | d : delete | o : add | i : edit | - : back |\n",
+		Header:  "Normal",
+		OpColor: cl.White,
+	}
+
+	ui.Views[op.Add] = vw.View{
+		Update:  ui.updateAddView,
+		View:    ui.renderListView,
+		Footer:  "\n| ctrl+c : quit | enter : save | esc : back |",
+		Header:  "Add",
+		OpColor: cl.Green,
+	}
+
+	ui.Views[op.Edit] = vw.View{
+		Update:  ui.updateEditView,
+		View:    ui.renderListView,
+		Footer:  "\n| ctrl+c : quit | enter : save | esc : back |",
+		Header:  "Edit",
+		OpColor: cl.Yellow,
+	}
+
+	ui.SwitchList()
+
 	return nil
 }
 
-func (ui *UI) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-
-	cmd := ui.updater(msg)
-	switch cmd {
-	case cm.Quit:
-		ui.ActiveView = vw.Quit
-		return ui, tea.Sequence(func() tea.Msg { return nil },
-			tea.Quit)
-	case cm.NavUp:
-		ui.ActiveView = vw.Lists
-	case cm.NavTo:
-		ui.TodoModel.SwitchList()
-		ui.ActiveView = vw.Todos
-	case cm.None:
-		// Do nothing
+func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	action := m.Views[m.ActiveOp].Update(msg)
+	if action != nil {
+		action = tea.Sequence(func() tea.Msg { return nil }, tea.Quit)
 	}
-	return ui, nil
+	return m, action
 }
 
-func (ui *UI) updater(msg tea.Msg) cm.Command {
-	var cmd cm.Command
-	switch ui.ActiveView {
-	case vw.Todos:
-		_, cmd = ui.TodoModel.Update(msg)
-	case vw.Lists:
-		_, cmd = ui.ListModel.Update(msg)
-	case vw.Quit:
-		_, cmd = "", cm.Quit
-	}
-	return cmd
-}
-
-func (ui *UI) View() string {
-	var viewStr string
-	switch ui.ActiveView {
-	case vw.Todos:
-		viewStr = ui.TodoModel.View()
-	case vw.Lists:
-		viewStr = ui.ListModel.View()
-	case vw.Quit:
-		return ""
-	}
-	return viewStr
+func (ui *Model) View() string {
+	ss := ui.Views[ui.ActiveOp].View()
+	ss += ui.Views[ui.ActiveOp].Footer
+	return ss
 }

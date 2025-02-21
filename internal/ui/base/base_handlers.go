@@ -1,7 +1,6 @@
 package ui_base
 
 import (
-	mo "todo-cli/internal/enums/command"
 	"unicode"
 
 	"github.com/charmbracelet/bubbletea"
@@ -22,10 +21,10 @@ func HandleTextInput(msg tea.KeyMsg, textField *string) {
 	}
 }
 
-func HandleNavigation(msg tea.KeyMsg, curs *int, lisLen int) mo.Command {
+func HandleNavigation(msg tea.KeyMsg, curs *int, lisLen int) tea.Cmd {
 	switch msg.String() {
 	case "ctrl+c", "q": // quit
-		return mo.Quit
+		return tea.Quit
 	case "up", "k": // move cursor up
 		if *curs > 0 {
 			*curs--
@@ -39,5 +38,5 @@ func HandleNavigation(msg tea.KeyMsg, curs *int, lisLen int) mo.Command {
 			*curs = 0
 		}
 	}
-	return mo.None
+	return nil
 }
