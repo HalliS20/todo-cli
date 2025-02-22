@@ -16,14 +16,14 @@ func (m *Model) updateAddView(msg tea.Msg) tea.Cmd {
 		switch msg.String() {
 
 		case "ctrl+c":
-			m.ActiveOp = op.Lister
-			m.ShownTodos = append(m.ShownTodos[:m.Cursor], m.ShownTodos[m.Cursor+1:]...)
 			return tea.Quit
 
 		case "enter":
-			lastLetter := string(todo.Title[len(todo.Title)-1])
+			lasti := len(todo.Title) - 1
+			lastLetter := string(todo.Title[lasti])
 			if lastLetter == "/" {
 				todo.Dir = true
+				todo.Title = todo.Title[:lasti]
 			}
 			m.Repo.Todos.OrderAndAdd(&m.ShownTodos)
 			sort.Sort(td.Todos(m.AllTodos))
@@ -51,13 +51,14 @@ func (m *Model) updateEditView(msg tea.Msg) tea.Cmd {
 		switch msg.String() {
 
 		case "ctrl+c":
-			m.ActiveOp = op.Lister
 			return tea.Quit
 
 		case "enter":
-			lastLetter := string(todo.Title[len(todo.Title)-1])
+			lasti := len(todo.Title) - 1
+			lastLetter := string(todo.Title[lasti])
 			if lastLetter == "/" && !todo.Dir {
 				todo.Dir = true
+				todo.Title = todo.Title[:lasti]
 				m.Repo.Todos.UpdateField(todo, "Dir")
 			} else {
 				m.Repo.Todos.UpdateField(todo, "Title")

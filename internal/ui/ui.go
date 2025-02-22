@@ -66,6 +66,16 @@ func (ui *Model) Init() tea.Cmd {
 		OpColor: cl.Yellow,
 	}
 
+	ui.Views[op.Quit] = vw.View{
+		Update: ui.updateEditView,
+		View: func() string {
+			return ""
+		},
+		Footer:  "",
+		Header:  "",
+		OpColor: cl.Yellow,
+	}
+
 	ui.SwitchList()
 
 	return nil
@@ -74,6 +84,7 @@ func (ui *Model) Init() tea.Cmd {
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	action := m.Views[m.ActiveOp].Update(msg)
 	if action != nil {
+		m.ActiveOp = op.Quit
 		action = tea.Sequence(func() tea.Msg { return nil }, tea.Quit)
 	}
 	return m, action

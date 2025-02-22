@@ -2,10 +2,10 @@ package ui
 
 import (
 	"strconv"
-	mo "todo-cli/internal/models/todo"
+	td "todo-cli/internal/models/todo"
 )
 
-func ListWrap(lisa *[]*mo.Todo, up bool) {
+func ListWrap(lisa *[]*td.Todo, up bool) {
 	// if we go up we are moving from the end(0) to one from back (listEnd - 1)
 	listEnd := len(*lisa) - 1
 
@@ -30,7 +30,7 @@ func ListWrap(lisa *[]*mo.Todo, up bool) {
 	HoistItem(lisa, end, oneFromOther)
 }
 
-func HoistItem(lisa *[]*mo.Todo, from int, to int) {
+func HoistItem(lisa *[]*td.Todo, from int, to int) {
 	n := 1
 	if to < from {
 		n = -1
@@ -43,4 +43,85 @@ func HoistItem(lisa *[]*mo.Todo, from int, to int) {
 		(*lisa)[i], (*lisa)[i+n] = (*lisa)[i+n], (*lisa)[i]
 		(*lisa)[i].Index, (*lisa)[i+n].Index = (*lisa)[i+n].Index, (*lisa)[i].Index
 	}
+}
+
+func (m *Model) getItem(id uint) *td.Todo {
+	for _, item := range m.AllTodos {
+		if item.ID == id {
+			return item
+		}
+	}
+	return nil
+}
+
+func (m *Model) GetParentsParent() uint {
+	for _, item := range m.AllTodos {
+		if item.ID == *m.ParentID {
+			return item.ParentID
+		}
+	}
+	return 0
+}
+
+func (m *Model) SwitchList() {
+	m.ShownTodos = []*td.Todo{}
+	for _, item := range m.AllTodos {
+		if item.ParentID == *m.ParentID {
+			m.ShownTodos = append(m.ShownTodos, item)
+		}
+	}
+	if m.Cursor >= len(m.ShownTodos) {
+		m.Cursor = 0
+	}
+}
+
+// ========== THESE 2 Delete functions may be doing the same thing
+// ========== too lazy to find out right now, its late
+func (m *Model) DirDelete(id uint) {
+	for _, item := range m.AllTodos {
+		if item.ParentID != id {
+			continue
+		}
+		if item.Dir {
+			m.DirDelete(item.ID)
+			m.Repo.Todos.Delete(int(item.ID))
+		} else {
+			m.Repo.Todos.Delete(int(item.ID))
+		}
+	}
+}
+
+func (m *Model) BigRem(todo *td.Todo) {
+	shiftMode := false
+	i := todo.Index
+	for ; i < len(m.AllTodos)-1; i++ {
+		if todo.ID == m.AllTodos[i].ID {
+			shiftMode = true
+		}
+		if shiftMode {
+			m.AllTodos[i] = m.AllTodos[i+1]
+		}
+	}
+	if !shiftMode && i != len(m.AllTodos)-1 {
+		panic("id not found")
+	}
+	m.AllTodos = m.AllTodos[:len(m.AllTodos)-1]
+}
+
+//====================== :)
+
+func (m *Model) DelUnfinished() {
+	i := 0
+	item := &td.Todo{}
+	for i, item = range m.AllTodos {
+		if item.ID == 0 {
+			break
+		}
+	}
+	lennie := len(m.AllTodos)
+	if i != len(m.AllTodos)-1 {
+		m.AllTodos = append(m.AllTodos[:i], m.AllTodos[i+1:]...)
+		return
+	}
+	m.AllTodos = m.AllTodos[:lennie-1]
 }

@@ -6,5 +6,6 @@ const (
 	Lister ActiveOp = iota
 	Add
 	Edit
+	Quit
 	Empty
 )
